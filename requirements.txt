@@ -1,0 +1,4 @@
+pygame-ce==2.5.6
+pyzmq==27.1.0
+tet_utils @ https://github.com/minufy/tet_utils/archive/master.zip#sha256=921a168181061814212d0ef18765df1f0c057a54a502b215d88f9af87ede6472
+zmq==0.0.0
