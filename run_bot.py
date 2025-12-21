@@ -1,8 +1,8 @@
 import pygame
 import zmq
 from bot import Bot
-from test_board import TestBoard
-from test_minos import TestMino
+from board import TestBoard
+from minos import TestMino
 
 clock = pygame.time.Clock()
 

@@ -1,5 +1,5 @@
-from test_board import TestBoard
-from test_minos import MINO_SHAPES, TestMino
+from board import TestBoard
+from minos import MINO_SHAPES, TestMino
 from weights import up, down
 
 SEARCH_DEPTH = 1
@@ -85,10 +85,6 @@ class Bot:
         if mode == "upstack":
             return self.weights_upstack
         return self.weights_downstack
-
-    # def set_weights(self, weights_upstack, weights_donwstack):
-    #     self.weights_upstack = weights_upstack
-    #     self.weights_downstack = weights_donwstack
 
     def place(self, mino, board):
         for y, row in enumerate(MINO_SHAPES[mino.type][str(mino.rotation)]):

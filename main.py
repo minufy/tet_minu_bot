@@ -5,6 +5,7 @@ import sys
 from bot import Bot
 from tet_utils.game import Game
 from tet_utils.minos import *
+from utils import *
 
 SCREEN_W = 1280
 SCREEN_H = 720
@@ -41,7 +42,7 @@ while True:
             game.keyup(key)
 
     game.draw(screen, UNIT)
-    # draw_hud(screen, bot, game)
+    draw_hud(screen, bot, game)
 
     dt = clock.tick(120)
 
