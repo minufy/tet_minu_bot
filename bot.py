@@ -57,6 +57,10 @@ class Bot:
         self.depth = SEARCH_DEPTH
         self.best_count = SEARCH_COUNT
 
+    def set_weights(self, up, down):
+        self.weights_upstack = up
+        self.weights_downstack = down
+
     def sync(self):
         self.board = TestBoard(self.game.board.grid)
         self.queue = [self.game.mino.type]+self.game.queue.copy()

@@ -1,38 +1,52 @@
 import pygame
-import zmq
+pygame.init()
+
+import sys
 from bot import Bot
-from test_board import TestBoard
-from test_minos import TestMino
+from tet_utils.game import Game
+from tet_utils.minos import *
+
+SCREEN_W = 1280
+SCREEN_H = 720
+UNIT = 24
+
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 
 clock = pygame.time.Clock()
 
-class GameEmu:
-    def __init__(self):
-        self.board = None
-        self.queue = None
-        self.mino = None
-
-    def update(self, game_state):
-        self.board = TestBoard(game_state["grid"])
-        self.queue = game_state["queue"]
-        self.mino = TestMino(game_state["mino_type"], 3, self.board.h//2)
-
-context = zmq.Context()
-print("connecting..")
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://localhost:5555")
-socket.send_json({"events": []})
-
-game = GameEmu()
-game_state = socket.recv_json()
-game.update(game_state)
+game = Game({
+    "das": 117,
+    "arr": 0,
+    "sdf": 0
+})
 bot = Bot(game, 1)
 
 while True:
-    dt = clock.tick(30)
-    events = bot.get_events()
-    socket.send_json({"events": events})
+    screen.fill("#333333")
      
-    game_state = socket.recv_json()
-    game.update(game_state)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                game.restart()
+                bot.restart()
+
+    for event in bot.get_events():
+        type, key = event.split(".")
+        if type == "keydown":
+            game.keydown(key)
+        if type == "keyup":
+            game.keyup(key)
+
+    game.draw(screen, UNIT)
+    # draw_hud(screen, bot, game)
+
+    dt = clock.tick(120)
+
+    game.update(dt)
     bot.update(dt)
+    # print(bot.get_scores(game.board))
+
+    pygame.display.update()
