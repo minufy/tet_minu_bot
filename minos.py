@@ -201,33 +201,33 @@ class Mino:
         self.y = y
         self.rotation = rotation
 
-    def check_collison(self, bitgrid):
+    def check_collision(self, board):
         bit_shape = BIT_SHAPES[self.type][str(self.rotation)]
-        for i, row in enumerate(bit_shape):
-            if row == 0: 
+
+        for dy, row in enumerate(bit_shape):
+            if row == 0:
                 continue
-        
-            target_y = self.y+i
-            if target_y < 0: 
-                continue
-            if target_y >= len(bitgrid):
+
+            y = self.y+dy
+
+            if y >= len(board):
                 return True
-            
-            if self.x >= 0:
-                shifted_row = row << self.x
-            else:
-                shifted_row = row >> abs(self.x)
+            if y < 0:
+                continue 
 
             if self.x < 0:
-                if (shifted_row << abs(self.x)) != row:
+                if row & ((1 << abs(self.x)) - 1):
                     return True
-            
-            if shifted_row > FULL_ROW:
+                shifted = row >> abs(self.x)
+            else:
+                shifted = row << self.x
+
+            if shifted & ~FULL_ROW:
                 return True
-            
-            if bitgrid[target_y] & shifted_row:
+ 
+            if board[y] & shifted:
                 return True
-            
+
         return False
 
     def test_offsets(self, bitgrid, offsets):
@@ -245,7 +245,7 @@ class Mino:
             self.rotation -= 4
         if self.rotation < 0:
             self.rotation += 4
-        if self.check_collison(bitgrid):
+        if self.check_collision(bitgrid):
             key = f"{old_rotation}{self.rotation}"
             offsets = JLTSZ_OFFSETS[key]
             if self.type == "I":
@@ -256,7 +256,7 @@ class Mino:
     def move(self, x, y, board):
         self.x += x
         self.y += y
-        if self.check_collison(board):
+        if self.check_collision(board):
             self.x -= x
             self.y -= y
             return False

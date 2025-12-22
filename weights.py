@@ -1,5 +1,7 @@
-up = {'lines': 0.2, 'change_rate': -0.1, 'holes': -0.3}
-down = {'lines': 0.4, 'change_rate': -0.3, 'holes': -0.4}
-# score: 91.0945
-up = {'lines': 0.851, 'change_rate': -0.417, 'holes': -0.64}
-down = {'lines': 0.703, 'change_rate': -0.725, 'holes': -0.538}
+# score: 14.466
+up = {'lines': 0.678, 'change_rate': -0.055, 'holes': -0.128}
+down = {'lines': 0.002, 'change_rate': -0.887, 'holes': -0.471}
+
+# score: 30.7595
+up = {'lines': 0.442, 'change_rate': -0.481, 'holes': -0.7}
+down = {'lines': 0.449, 'change_rate': -0.576, 'holes': -0.72}

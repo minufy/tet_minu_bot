@@ -5,10 +5,10 @@ from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
 SEARCH_DEPTH = 1
-SEARCH_COUNT = 2
+SEARCH_COUNT = 1
 
 DANGER_HEIGHT = 11
-MAX_LEN_INPUTS = 4
+MAX_LEN_INPUTS = 3
 
 LINES = {
     "upstack": {
@@ -67,8 +67,6 @@ for type in MINO_TYPES:
     MINO_INPUTS[type] = make_inputs(type)
     MINO_INPUTS[type].sort(key=lambda x: len(x))
     # print(len(MINO_INPUTS[type]))
-
-MIN_HOLES = 10 
 
 TSPIN_LINES = {
     3: 12,
@@ -195,9 +193,6 @@ class Bot:
                 holes = self.get_holes(drop_bitgrid)
                 
                 # print_bitgrid(drop_bitgrid, BOARD_W)
-
-                if holes > MIN_HOLES:
-                    continue
 
                 weights = self.get_weights(bitgrid)
                 lines *= weights["lines"] 
@@ -361,11 +356,12 @@ class Bot:
     
     # @timer
     def think(self):
-        if len(self.queue) >= max(SEARCH_DEPTH, 2):
+        if len(self.queue) >= max(self.search_depth, 2)+1:
             move = self.beam_search()
             if move:
                 self.execute_move(move)
                 self.bitgrid = move.bitgrid
+                # print_bitgrid(self.bitgrid, BOARD_W)
                 self.line_clear(self.bitgrid)
                 if move.hold and not self.first_held:
                     self.first_held = True

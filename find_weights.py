@@ -5,6 +5,7 @@ import multiprocessing as mp
 import random
 from bot import Bot
 from tet_utils.game import Game
+from utils import print_bitgrid, BOARD_W
 
 class Test:
     def __init__(self, game, bot, prev_weights_upstack=None, prev_weights_downstack=None):
@@ -56,7 +57,7 @@ class Result:
 RATE = 0.25
 TEST_DEPTH = 15
 TEST_COUNT = 3
-TEST_DURATION = 2000
+TEST_DURATION = 40000
 
 def run_game(bot, game):
     for _ in range(TEST_DURATION):
@@ -71,6 +72,7 @@ def run_game(bot, game):
         bot.update(1)
         if bot.bitgrid[len(bot.bitgrid)//2-4] != 0:
             break
+        
         # print_bitgrid(bot.bitgrid, BOARD_W)
         # test.update(1)
 
@@ -82,13 +84,14 @@ def run_test(args):
         "sdf": 0
     }
     game = Game(handling)
-    bot = Bot(game, handling, 0, True)
+    bot = Bot(game, handling, 0)
     test = Test(game, bot, prev_result.weights_upstack, prev_result.weights_downstack)
     
     run_game(bot, game)
     # score = game.attack
     bot_score = sum(bot.get_scores(bot.bitgrid, False, "I"))
     score = game.attack+bot_score
+    # print_bitgrid(bot.bitgrid, BOARD_W)
     print(f"{i+1}/{TEST_COUNT}")
     print(f"score: {score}")
     return Result(score, test.weights_upstack, test.weights_downstack)
