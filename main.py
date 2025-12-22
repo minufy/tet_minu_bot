@@ -20,9 +20,9 @@ handling = {
     "arr": 0,
     "sdf": 0
 }
-game = Game(handling, 0)
+game = Game(handling, 1)
 bot = Bot(game, handling, 1)
-
+ 
 keys_to_code = {
     pygame.K_LSHIFT: "hold",
     pygame.K_UP: "cw",
@@ -51,6 +51,7 @@ while True:
         if event.type == pygame.KEYUP:
             if event.key in keys_to_code:
                 game.keyup(keys_to_code[event.key])
+                
     for event in bot.get_events():
         type, key = event.split(".")
         if type == "keydown":
@@ -61,10 +62,11 @@ while True:
     game.draw(screen, UNIT)
     draw_hud(screen, bot, game)
 
-    dt = clock.tick(60)
+    dt = clock.tick(120)
 
     game.update(dt)
     bot.update(dt)
-    # print(bot.get_scores(game.board))
+    # print(bot.get_holes(grid_to_bitgrid(game.board.grid)))
+    # print(bot.get_scores(grid_to_bitgrid(game.board.grid), False, "T"))
 
     pygame.display.update()

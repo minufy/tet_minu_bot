@@ -2,8 +2,11 @@ import pygame
 import zmq
 import sys
 from bot import Bot
-from board import Board
 from minos import Mino
+
+class Board:
+    def __init__(self, grid):
+        self.grid = grid
 
 clock = pygame.time.Clock()
 

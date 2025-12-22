@@ -1,4 +1,5 @@
 import pygame
+import time
 
 BOARD_W = 10
 FULL_ROW = (2<<(BOARD_W-1))-1
@@ -25,6 +26,24 @@ def print_bitgrid(bitgrid, w):
         print_row = bin(row)[2:].zfill(w-1)[::-1]
         print(print_row.replace("0", "  ").replace("1", "[]"))
     print("-"*w*2)
+
+times = {}
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        name = func.__name__
+        if name not in times:
+            times[name] = 0
+        # print(name, end_time-start_time)
+        old_time = times[name]
+        times[name] += end_time-start_time
+        if int(old_time) != int(times[name]):
+            print(times)
+        return result
+    return wrapper
 
 def draw_hud(screen, bot, game):
     x = 15
@@ -74,3 +93,9 @@ def draw_hud(screen, bot, game):
     max_height_text = render_text(font, f"max_height: {max(bot.get_heights(bitgrid))}")
     screen.blit(max_height_text, (x, y))
     y += font.get_height()
+
+    for py, row in enumerate(bot.bitgrid):
+        for px in range(BOARD_W):
+            o = 0 if (row >> px) & 1 == 1 else 1
+            if py >= len(bot.bitgrid)//2:
+                pygame.draw.rect(screen, "#666666", (x+px*12, py*12, 12, 12), o)

@@ -2,9 +2,9 @@ import pygame
 pygame.init()
 
 import multiprocessing as mp
+import random
 from bot import Bot
 from tet_utils.game import Game
-import random
 
 class Test:
     def __init__(self, game, bot, prev_weights_upstack=None, prev_weights_downstack=None):
@@ -53,10 +53,10 @@ class Result:
         self.weights_upstack = weights_upstack
         self.weights_downstack = weights_downstack
 
-RATE = 0.35
+RATE = 0.25
 TEST_DEPTH = 15
 TEST_COUNT = 3
-TEST_DURATION = 1500
+TEST_DURATION = 2000
 
 def run_game(bot, game):
     for _ in range(TEST_DURATION):
@@ -69,27 +69,32 @@ def run_game(bot, game):
 
         game.update(1)
         bot.update(1)
+        if bot.bitgrid[len(bot.bitgrid)//2-4] != 0:
+            break
+        # print_bitgrid(bot.bitgrid, BOARD_W)
         # test.update(1)
 
 def run_test(args):
     i, prev_result = args
-    game = Game({
-        "das": 117,
+    handling = {
+        "das": 250,
         "arr": 0,
         "sdf": 0
-    })
-    bot = Bot(game, 1)
+    }
+    game = Game(handling)
+    bot = Bot(game, handling, 0, True)
     test = Test(game, bot, prev_result.weights_upstack, prev_result.weights_downstack)
     
     run_game(bot, game)
     # score = game.attack
-    score = game.attack+sum(bot.get_scores(game.board))
+    bot_score = sum(bot.get_scores(bot.bitgrid, False, "I"))
+    score = game.attack+bot_score
     print(f"{i+1}/{TEST_COUNT}")
     print(f"score: {score}")
     return Result(score, test.weights_upstack, test.weights_downstack)
 
 def run(prev_result, depth=0):
-    print(f"depth: {depth}")
+    print(f"> depth: {depth}")
     if depth > TEST_DEPTH:
         return prev_result
     
@@ -104,7 +109,7 @@ def run(prev_result, depth=0):
 
 if __name__ == "__main__":
     mp.freeze_support()
-
+    
     result = run(Result(0, None, None))
     with open("weights.py", "a") as file:
         file.writelines("\n")
