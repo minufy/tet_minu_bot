@@ -53,8 +53,8 @@ class Result:
         self.weights_upstack = weights_upstack
         self.weights_downstack = weights_downstack
 
-RATE = 0.3
-TEST_DEPTH = 10
+RATE = 0.35
+TEST_DEPTH = 15
 TEST_COUNT = 3
 TEST_DURATION = 1500
 

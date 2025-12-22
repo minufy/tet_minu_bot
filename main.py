@@ -16,12 +16,13 @@ screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 
 clock = pygame.time.Clock()
 
-game = Game({
+handling = {
     "das": 117,
     "arr": 0,
     "sdf": 0
-}, time.time())
-bot = Bot(game, 1)
+}
+game = Game(handling, 0)
+bot = Bot(game, handling, 1)
 
 keys_to_code = {
     pygame.K_LSHIFT: "hold",
@@ -61,11 +62,10 @@ while True:
     game.draw(screen, UNIT)
     draw_hud(screen, bot, game)
 
-    dt = clock.tick(120)
+    dt = clock.tick(60)
 
     game.update(dt)
     bot.update(dt)
-    # bot.get_change_rate(game.board)
-    # print(bot.get_heights(game.board), bot.get_change_rate(game.board))
+    # print(bot.get_scores(game.board))
 
     pygame.display.update()
