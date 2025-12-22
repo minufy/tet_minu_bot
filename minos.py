@@ -188,22 +188,11 @@ MINO_SHAPES = {
     },
 }
 
-
-def shape_to_bitgrid(grid):
-    bitgrid = []
-    for row in grid:
-        b = 0
-        for x, cell in enumerate(row):
-            if cell:
-                b |= (1<<x)
-        bitgrid.append(b)
-    return bitgrid
-
 BIT_SHAPES = {}
 for type in MINO_SHAPES:
     BIT_SHAPES[type] = {}
     for r in MINO_SHAPES[type]:
-        BIT_SHAPES[type][r] = shape_to_bitgrid(MINO_SHAPES[type][r])
+        BIT_SHAPES[type][r] = grid_to_bitgrid(MINO_SHAPES[type][r], 0)
 
 class Mino:
     def __init__(self, type, x, y, rotation=0):

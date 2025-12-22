@@ -2,7 +2,7 @@ import time
 from minos import Mino, BIT_SHAPES
 from weights import up, down
 from collections import deque
-from utils import grid_to_bitgrid, BOARD_W, FULL_ROW
+from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW
 
 SEARCH_DEPTH = 0
 SEARCH_COUNT = 2
@@ -312,6 +312,7 @@ class Bot:
                 self.queue.pop(0)
 
     def update(self, dt):
+        # print_bitgrid(self.bitgrid, BOARD_W)
         if len(self.game.queue) == 11:
             bag = self.game.queue[-7:]
             if self.last_queue != bag:

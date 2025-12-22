@@ -10,15 +10,21 @@ def render_text(font, text, color="#ffffff"):
     surface = font.render(text, True, color)
     return surface
 
-def grid_to_bitgrid(grid):
+def grid_to_bitgrid(grid, empty=" "):
     bitgrid = []
     for row in grid:
         b = 0 
         for x, cell in enumerate(row):
-            if cell != " ":
+            if cell != empty:
                 b |= (1<<x)
         bitgrid.append(b)
     return bitgrid
+
+def print_bitgrid(bitgrid, w):
+    for row in bitgrid:
+        print_row = bin(row)[2:].zfill(w-1)[::-1]
+        print(print_row.replace("0", "  ").replace("1", "[]"))
+    print("-"*w*2)
 
 def draw_hud(screen, bot, game):
     x = 15
