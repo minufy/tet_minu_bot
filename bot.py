@@ -1,18 +1,18 @@
 from board import TestBoard
-from minos import MINO_SHAPES, TestMino
+from tet_utils.minos import Mino, MINO_SHAPES
 from weights import up, down
 
-SEARCH_DEPTH = 1
-SEARCH_COUNT = 2
+SEARCH_DEPTH = 2
+SEARCH_COUNT = 1
 
-DANGER_HEIGHT = 7
+DANGER_HEIGHT = 11
 
 LINE_TABLE = {
     "upstack": {
         0: 0,
         1: -4,
-        2: -3,
-        3: -2,
+        2: -4,
+        3: -4,
         4: 10
     },
     "downstack": {
@@ -53,7 +53,7 @@ class Bot:
         self.think_time = think_time
         self.think_timer = 0
         self.hold_type = None
-        self.held = False
+        self.first_held = False
         self.depth = SEARCH_DEPTH
         self.best_count = SEARCH_COUNT
 
@@ -71,7 +71,7 @@ class Bot:
         self.inputs = []
         self.think_timer = 0
         self.hold_type = None
-        self.held = False
+        self.first_held = False
         self.depth = SEARCH_DEPTH
         self.best_count = SEARCH_COUNT
 
@@ -106,7 +106,7 @@ class Bot:
         for mino_type in mino_types:
             for r in [0, 1, 2, 3]:
                 for x in range(-2, self.board.w-1):
-                    mino = TestMino(mino_type, x, self.game.board.h//2-4, r)
+                    mino = Mino(mino_type, x, self.game.board.h//2-4, r)
                     board = TestBoard(grid)
 
                     if mino.check_collison(board):
@@ -123,7 +123,7 @@ class Bot:
                     moves.append(Move(mino, score, board, hold))
         return moves
  
-    def exectue_move(self, move):
+    def execute_move(self, move):
         if move.hold:
             self.input("hold", 1)
             self.hold_type = move.hold
@@ -173,14 +173,18 @@ class Bot:
         holes = 0
         for x in range(board.w):
             block = False
+            top_y = None
             for y in range(board.h):
                 if board.grid[y][x] != " ":
                     block = True
+                    top_y = y
                 elif block and board.grid[y][x] == " ":
                     holes += 1
-                    # break
+                    if top_y != None:
+                        holes += y-top_y
+                        top_y = None
         return holes
-
+    
     def get_change_rate(self, board):
         heights = self.get_heights(board)
         diffs = []
@@ -198,7 +202,7 @@ class Bot:
         lines *= weights["lines"]
         change_rate *= weights["change_rate"]
         holes *= weights["holes"]
-
+        
         return lines, change_rate, holes
 
     def research(self, depth, move):
@@ -228,11 +232,11 @@ class Bot:
             moves = self.search_moves(self.queue[0], self.hold_type or self.queue[1], self.board, 0)
             if moves:
                 move = moves[-1]
-                self.exectue_move(move)
+                self.execute_move(move)
                 self.place(move.mino, self.board)
                 self.line_clear(self.board)
-                if move.hold and not self.held:
-                    self.held = True
+                if move.hold and not self.first_held:
+                    self.first_held = True
                     self.queue.pop(0)
                 self.queue.pop(0)
 

@@ -1,4 +1,5 @@
 import pygame
+import time
 pygame.init()
 
 import sys
@@ -19,8 +20,19 @@ game = Game({
     "das": 117,
     "arr": 0,
     "sdf": 0
-})
+}, time.time())
 bot = Bot(game, 1)
+
+keys_to_code = {
+    pygame.K_LSHIFT: "hold",
+    pygame.K_UP: "cw",
+    pygame.K_LCTRL: "ccw",
+    pygame.K_a: "180",
+    pygame.K_LEFT: "left",
+    pygame.K_RIGHT: "right",
+    pygame.K_SPACE: "harddrop",
+    pygame.K_DOWN: "softdrop",
+}
 
 while True:
     screen.fill("#333333")
@@ -32,8 +44,13 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
                 game.restart()
+                # game.restart(time.time())
                 bot.restart()
-
+            if event.key in keys_to_code:
+                game.keydown(keys_to_code[event.key])
+        if event.type == pygame.KEYUP:
+            if event.key in keys_to_code:
+                game.keyup(keys_to_code[event.key])
     for event in bot.get_events():
         type, key = event.split(".")
         if type == "keydown":
@@ -48,6 +65,7 @@ while True:
 
     game.update(dt)
     bot.update(dt)
-    # print(bot.get_scores(game.board))
+    # bot.get_change_rate(game.board)
+    # print(bot.get_heights(game.board), bot.get_change_rate(game.board))
 
     pygame.display.update()

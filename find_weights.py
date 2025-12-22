@@ -54,7 +54,7 @@ class Result:
         self.weights_downstack = weights_downstack
 
 RATE = 0.3
-TEST_DEPTH = 20
+TEST_DEPTH = 10
 TEST_COUNT = 3
 TEST_DURATION = 1500
 
