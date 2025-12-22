@@ -1,11 +1,24 @@
 import pygame
 
+BOARD_W = 10
+FULL_ROW = (2<<(BOARD_W-1))-1
+
 font = pygame.font.Font("fonts/Pretendard-Regular.ttf", 20)
 font_bold = pygame.font.Font("fonts/Pretendard-Bold.ttf", 30)
 
 def render_text(font, text, color="#ffffff"):
     surface = font.render(text, True, color)
     return surface
+
+def grid_to_bitgrid(grid):
+    bitgrid = []
+    for row in grid:
+        b = 0 
+        for x, cell in enumerate(row):
+            if cell != " ":
+                b |= (1<<x)
+        bitgrid.append(b)
+    return bitgrid
 
 def draw_hud(screen, bot, game):
     x = 15
@@ -14,9 +27,11 @@ def draw_hud(screen, bot, game):
 
     weights_text = render_text(font_bold, "WEIGHTS", "#F6D03C")
     screen.blit(weights_text, (x, y))
-    y += font_bold.get_height()
+    y += font_bold.get_height() 
 
-    weights = bot.get_weights(bot.game.board)
+    bitgrid = grid_to_bitgrid(game.board.grid)
+
+    weights = bot.get_weights(bitgrid)
     for i, weight in enumerate(weights):
         text = render_text(font, f"{weight}: {weights[weight]}")
         screen.blit(text, (x, y))
@@ -46,10 +61,10 @@ def draw_hud(screen, bot, game):
     screen.blit(attack_text, (x, y))
     y += font.get_height()
     
-    mode_text = render_text(font, f"mode: {bot.get_mode(game.board)}")
+    mode_text = render_text(font, f"mode: {bot.get_mode(bitgrid)}")
     screen.blit(mode_text, (x, y))
     y += font.get_height()
 
-    max_height_text = render_text(font, f"max_height: {max(bot.get_heights(game.board))}")
+    max_height_text = render_text(font, f"max_height: {max(bot.get_heights(bitgrid))}")
     screen.blit(max_height_text, (x, y))
     y += font.get_height()

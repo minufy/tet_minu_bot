@@ -1,11 +1,10 @@
 import pygame
-import time
 pygame.init()
 
 import sys
 from bot import Bot
 from tet_utils.game import Game
-from tet_utils.minos import *
+from minos import *
 from utils import *
 
 SCREEN_W = 1280

@@ -2,8 +2,8 @@ import pygame
 import zmq
 import sys
 from bot import Bot
-from board import TestBoard
-from tet_utils.minos import Mino
+from board import Board
+from minos import Mino
 
 clock = pygame.time.Clock()
 
@@ -14,7 +14,7 @@ class GameEmu:
         self.mino = None
 
     def update(self, game_state):
-        self.board = TestBoard(game_state["grid"])
+        self.board = Board(game_state["grid"])
         self.queue = game_state["queue"]
         self.mino = Mino(game_state["mino_type"], 3, self.board.h//2)
 
