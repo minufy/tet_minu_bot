@@ -4,10 +4,10 @@ from collections import deque
 from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
-SEARCH_DEPTH = 3
-SEARCH_COUNT = 10
+SEARCH_DEPTH = 2
+SEARCH_COUNT = 12
 
-DANGER_HEIGHT = 6
+DANGER_HEIGHT = 7
 MAX_LEN_INPUTS = 4
 
 LINES = {
@@ -28,9 +28,9 @@ LINES = {
 }
 
 TSPIN_LINES = {
-    3: 30,
-    2: 20,
-    1: 10,
+    3: 15,
+    2: 10,
+    1: 2,
     0: 0
 }
 
@@ -61,7 +61,9 @@ MINO_ROTATIONS = {
 INPUTS = {
     "softdrop": (0, 1, 0),
     "right": (1, 0, 0),
+    "chargeright": (1, 0, 0),
     "left": (-1, 0, 0),
+    "chargeleft": (-1, 0, 0),
     "cw": (0, 0, 1),
     "ccw": (0, 0, -1),
     "180": (0, 0, 2),
@@ -186,43 +188,45 @@ class Bot:
                 self.place(mino, temp_bitgrid)
 
                 tuple_bitgrid = tuple(temp_bitgrid[len(bitgrid)//2-4:])
-                if (tuple_bitgrid, y) in visited:
-                    continue 
-                visited.add((tuple_bitgrid, y))
 
                 blocked = mino.move(0, -1, bitgrid) == False
                 moves.append(Move(mino_type, sum(self.get_scores(tuple_bitgrid, blocked, mino_type)), temp_bitgrid, hold, inputs))
                 self.line_clear(temp_bitgrid)
 
                 move_states = []
+                if len(inputs) > 1:
+                    move_states.append("softdrop")
                 if not rotated:
                     for key in MINO_ROTATIONS[mino_type]:
-                        move_states.append((key, "tap"))
+                        move_states.append((key))
                 if moved < 2:
-                    move_states.append(("right", "tap"))
-                    move_states.append(("right", "charge"))
-                    move_states.append(("left", "tap"))
-                    move_states.append(("left", "charge"))
-                move_states.append(("softdrop", "charge"))
-                for i, d in move_states:
+                    move_states.append("chargeright")
+                    move_states.append("chargeleft")
+                    move_states.append("right")
+                    move_states.append("left")
+                
+                for d in move_states:
                     new_mino = Mino(mino_type, x, y, r)
-                    dx, dy, dr = INPUTS[i]
+                    dx, dy, dr = INPUTS[d]
                     if dr:
                         new_mino.rotate(dr, bitgrid)
                         
                     rep = 1
-                    if d == "charge":
+                    if d.startswith("charge") or d == "softdrop":
                         rep = len(bitgrid)
                     for _ in range(rep):
                         if new_mino.move(dx, dy, bitgrid) == False:
                             break
                     
                     xyr = (new_mino.x, new_mino.y, new_mino.rotation)
+                    if xyr in visited:
+                        continue
+                    visited.add(xyr)
 
                     if y:
-                        q.append((xyr, (False, 0), inputs+[(i, d)]))
+                        q.append((xyr, (False, 0), inputs+[d]))
                     else:
-                        q.append((xyr, (dr != 0, moved+abs(dx)), inputs+[(i, d)]))
+                        q.append((xyr, (dr != 0, moved+abs(dx)), inputs+[d]))
 
         return moves
  
@@ -240,9 +244,11 @@ class Bot:
             self.hold_type = move.hold
 
         inputs = move.inputs
-        for i, d in inputs:
-            time = 0 if d == "tap" else self.handling["das"]+self.handling["arr"]*3
-            self.input(i, time)
+        for d in inputs:
+            time = 0
+            if d.startswith("charge") or d == "softdrop":
+                time = self.handling["das"]+self.handling["arr"]*4
+            self.input(d, time)
 
         self.input("harddrop", 0)
 
@@ -352,7 +358,7 @@ class Bot:
 
             if beam == []:
                 break
-        
+            
         return beam[0].first_move if beam else None
     
     def think(self):

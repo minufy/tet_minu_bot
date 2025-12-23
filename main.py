@@ -34,7 +34,7 @@ keys_to_code = {
     pygame.K_DOWN: "softdrop",
 }
 
-bot_active = True
+bot_active = False
 while True:
     screen.fill("#333333")
      

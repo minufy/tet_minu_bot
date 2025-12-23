@@ -91,8 +91,8 @@ def run_test(args):
     
     run_game(bot, game)
     # score = game.attack
-    bot_score = sum(bot.get_scores(tuple(bot.bitgrid)))
-    score = game.attack+bot_score
+    # bot_score = sum(bot.get_scores(tuple(bot.bitgrid)))
+    score = game.attack 
     # print_bitgrid(bot.bitgrid, BOARD_W)
     print(f"{i+1}/{TEST_COUNT}")
     print(f"score: {score}")
