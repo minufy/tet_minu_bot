@@ -37,7 +37,7 @@ def timer(func):
         name = func.__name__
         if name not in times:
             times[name] = 0
-        # print(name, end_time-start_time)
+        print(name, end_time-start_time)
         old_time = times[name]
         times[name] += end_time-start_time
         if int(old_time) != int(times[name]):

@@ -21,8 +21,8 @@ handling = {
     "sdf": 0
 }
 game = Game(handling, 1)
-bot = Bot(game, handling, 1)
- 
+bot = Bot(game, 1)
+
 keys_to_code = {
     pygame.K_LSHIFT: "hold",
     pygame.K_UP: "cw",
@@ -34,6 +34,7 @@ keys_to_code = {
     pygame.K_DOWN: "softdrop",
 }
 
+bot_active = True
 while True:
     screen.fill("#333333")
      
@@ -42,6 +43,8 @@ while True:
             pygame.quit()
             sys.exit()
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                bot_active = not bot_active
             if event.key == pygame.K_r:
                 game.restart()
                 # game.restart(time.time())
@@ -64,9 +67,10 @@ while True:
 
     dt = clock.tick(120)
 
+    if bot_active:
+        bot.update(dt)
     game.update(dt)
-    bot.update(dt)
-    # print(bot.get_holes(grid_to_bitgrid(game.board.grid)))
+    # print(bot.get_tspin_potential(grid_to_bitgrid(game.board.grid)))
     # print(bot.get_scores(grid_to_bitgrid(game.board.grid), False, "T"))
 
     pygame.display.update()

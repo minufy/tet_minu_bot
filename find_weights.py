@@ -20,11 +20,13 @@ class Test:
             "lines": random.random(),
             "change_rate": -random.random(),
             "holes": -random.random(),
+            "tspin_potential": random.random()*1.5,
         }
         weights_downstack = {
             "lines": random.random(),
             "change_rate": -random.random(),
             "holes": -random.random(),
+            "tspin_potential": random.random()*1.5,
         }
 
         if self.prev_weights_upstack:
@@ -55,9 +57,9 @@ class Result:
         self.weights_downstack = weights_downstack
 
 RATE = 0.25
-TEST_DEPTH = 15
+TEST_DEPTH = 5
 TEST_COUNT = 3
-TEST_DURATION = 40000
+TEST_DURATION = 10000
 
 def run_game(bot, game):
     for _ in range(TEST_DURATION):
@@ -79,17 +81,17 @@ def run_game(bot, game):
 def run_test(args):
     i, prev_result = args
     handling = {
-        "das": 250,
+        "das": 50,
         "arr": 0,
         "sdf": 0
     }
     game = Game(handling)
-    bot = Bot(game, handling, 0)
+    bot = Bot(game, 0)
     test = Test(game, bot, prev_result.weights_upstack, prev_result.weights_downstack)
     
     run_game(bot, game)
     # score = game.attack
-    bot_score = sum(bot.get_scores(bot.bitgrid, False, "I"))
+    bot_score = sum(bot.get_scores(tuple(bot.bitgrid)))
     score = game.attack+bot_score
     # print_bitgrid(bot.bitgrid, BOARD_W)
     print(f"{i+1}/{TEST_COUNT}")

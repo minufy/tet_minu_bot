@@ -1,4 +1,5 @@
 import pygame
+pygame.init()
 import zmq
 import sys
 from bot import Bot
@@ -15,11 +16,14 @@ class GameEmu:
         self.board = None
         self.queue = None
         self.mino = None
+        self.handling = None
 
     def update(self, game_state):
         self.board = Board(game_state["grid"])
         self.queue = game_state["queue"]
-        self.mino = Mino(game_state["mino_type"], 3, self.board.h//2)
+        self.mino = Mino(game_state["mino_type"], 3, len(self.board.grid)//2-4)
+        self.handling = game_state["handling"]
+        self.hold_type = game_state["hold_mino_type"]
 
 index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 print(f"starting bot {index}")
@@ -38,13 +42,14 @@ bot = None
 started = False
 
 while True:
-    dt = clock.tick(30)
+    dt = clock.tick(60)
 
     game_state = socket.recv_json()
     if game_state["state"] == "started" and not started:
         game = GameEmu()
         game.update(game_state)
-        bot = Bot(game, 200+100*index)
+        bot = Bot(game, 400)
+        # bot = Bot(game, 200+100*index)
         started = True
 
     if started:    
