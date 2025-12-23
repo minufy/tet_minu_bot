@@ -54,7 +54,7 @@ def draw_hud(screen, bot, game):
     screen.blit(weights_text, (x, y))
     y += font_bold.get_height() 
 
-    bitgrid = grid_to_bitgrid(game.board.grid)
+    bitgrid = tuple(grid_to_bitgrid(game.board.grid))
 
     weights = bot.get_weights(bitgrid)
     for i, weight in enumerate(weights):

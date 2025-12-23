@@ -1,14 +1,14 @@
-from minos import Mino, BIT_SHAPES, MINO_TYPES
+from minos import Mino, BIT_SHAPES
 from weights import up, down
 from collections import deque
 from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
-SEARCH_DEPTH = 1
+SEARCH_DEPTH = 0
 SEARCH_COUNT = 1
 
 DANGER_HEIGHT = 11
-MAX_LEN_INPUTS = 3
+MAX_LEN_INPUTS = 4
 
 LINES = {
     "upstack": {
@@ -37,36 +37,15 @@ MINO_ROTATIONS = {
     "J": ["cw", "ccw", "180"],
 }
 
-MINO_INPUTS = {}
-def make_inputs(mino_type):
-    q = deque()
-    q.append((False, False, []))
-    results = []
-    while q:
-        rotated, moved, inputs = q.popleft()
-        if len(inputs) > MAX_LEN_INPUTS:
-            continue
-        results.append(inputs)
-         
-        if not rotated:
-            for r in MINO_ROTATIONS[mino_type]:
-                q.append((True, moved, inputs+[(r, "tap")]))
-        if not moved:
-            q.append((rotated, True, inputs+[("right", "tap")]))
-            q.append((rotated, True, inputs+[("left", "tap")]))
-            q.append((rotated, True, inputs+[("right", "das")]))
-            q.append((rotated, True, inputs+[("left", "das")]))
-            q.append((rotated, True, inputs+[("right", "das"), ("left", "tap")]))
-            q.append((rotated, True, inputs+[("left", "das"), ("right", "tap")]))
-            q.append((rotated, True, inputs+[("right", "tap"), ("right", "tap")]))
-            q.append((rotated, True, inputs+[("left", "tap"), ("left", "tap")]))
-        q.append((False, False, inputs+[("softdrop", "das")]))
-    return results
-        
-for type in MINO_TYPES:
-    MINO_INPUTS[type] = make_inputs(type)
-    MINO_INPUTS[type].sort(key=lambda x: len(x))
-    # print(len(MINO_INPUTS[type]))
+INPUTS = {
+    "softdrop": (0, 1, 0),
+    "right": (1, 0, 0),
+    "left": (-1, 0, 0),
+    "cw": (0, 0, 1),
+    "ccw": (0, 0, -1),
+    "180": (0, 0, 2),
+}
+
 
 TSPIN_LINES = {
     3: 12,
@@ -103,7 +82,7 @@ class Bot:
     def __init__(self, game, handling, think_time):
         self.game = game
         self.bitgrid = grid_to_bitgrid(self.game.board.grid)
-        self.queue = [self.game.mino.type]+self.game.queue.copy()
+        self.queue = [self.game.mino.type]+self.game.queue[:]
         self.last_queue = []
         self.inputs = []
         self.weights_upstack = up
@@ -127,7 +106,7 @@ class Bot:
         # print("BOT")
         # print_bitgrid(self.bitgrid, BOARD_W)
         self.bitgrid = grid_to_bitgrid(self.game.board.grid)
-        self.queue = [self.game.mino.type]+self.game.queue.copy()
+        self.queue = [self.game.mino.type]+self.game.queue[:]
         self.last_queue = []
         self.hold_type = self.game.hold_type
 
@@ -176,40 +155,56 @@ class Bot:
         mino_types = [mino_0]
         if mino_1:
             mino_types.append(mino_1)
+            
         moves = []
         for mino_type in mino_types:
             v = set()
-            results = MINO_INPUTS[mino_type]
-            for inputs in results:
-                _, drop_bitgrid = self.check_input(inputs, mino_type, list(bitgrid))
-                                
-                tuple_bitgrid = tuple(drop_bitgrid)
-                if tuple_bitgrid in v:
+            q = deque()
+            q.append(((3, len(bitgrid)//2-4, 0), (False, 0), []))
+            hold = mino_type == mino_1
+            while q:
+                (x, y, r), (rotated, moved), inputs = q.popleft()
+                if len(inputs) > MAX_LEN_INPUTS:
                     continue
-                v.add(tuple_bitgrid)
 
-                lines = LINES[self.get_mode(drop_bitgrid)][self.get_lines(drop_bitgrid)]
-                change_rate = self.get_change_rate(drop_bitgrid)
-                holes = self.get_holes(drop_bitgrid)
-                
-                # print_bitgrid(drop_bitgrid, BOARD_W)
+                mino = Mino(mino_type, x, y, r)
+                temp_bitgrid = list(bitgrid)
+                self.soft_drop(mino, temp_bitgrid)
+                self.place(mino, temp_bitgrid)
+                tuple_bitgrid = tuple(temp_bitgrid)
+                moves.append(Move(mino_type, sum(self.get_scores(tuple_bitgrid)), temp_bitgrid, hold, inputs))
 
-                weights = self.get_weights(bitgrid)
-                lines *= weights["lines"] 
-                change_rate *= weights["change_rate"]
-                holes *= weights["holes"]
-
-                score = lines+change_rate+holes
-            
-                self.line_clear(drop_bitgrid)
-                
-                hold = None
-                if mino_type != mino_0:
-                    hold = mino_0
-                    
-                move = Move(mino_type, score, drop_bitgrid, hold, inputs)
-                moves.append(move)
-        return moves
+                move_states = []
+                if not rotated:
+                    # print(MINO_ROTATIONS[mino_type])
+                    for key in MINO_ROTATIONS[mino_type]:
+                        move_states.append((key, "tap"))
+                if moved < 2:
+                    move_states.append(("right", "tap"))
+                    move_states.append(("right", "das"))
+                    move_states.append(("left", "tap"))
+                    move_states.append(("left", "das"))
+                move_states.append(("softdrop", "das"))
+                for i, d in move_states:
+                    new_mino = Mino(mino_type, x, y, r)
+                    dx, dy, dr = INPUTS[i]
+                    if dr:
+                        new_mino.rotate(dr, bitgrid)
+                    rep = 1
+                    if d == "das":
+                        rep = len(bitgrid)
+                    for _ in range(rep):
+                        if new_mino.move(dx, dy, bitgrid) == False:
+                            break
+                    xyr = (new_mino.x, new_mino.y, new_mino.rotation)
+                    if xyr in v:
+                        continue
+                    v.add(xyr)
+                    if y:
+                        q.append((xyr, (False, 0), inputs+[(i, d)]))
+                    else:
+                        q.append((xyr, (dr != 0, moved+abs(dx)), inputs+[(i, d)]))
+            return moves
  
     def move_mino(self, mino, x, y, bitgrid, charge):
         rep = 1
@@ -218,41 +213,12 @@ class Bot:
         for _ in range(rep):
             if mino.move(x, y, bitgrid) == False:
                 break
-    
-    # @timer
-    def check_input(self, inputs, mino_type, bitgrid):
-        new_bitgrid = bitgrid.copy()
-        mino = Mino(mino_type, 3, len(new_bitgrid)//2-4, 0)
-        for i, d in inputs:
-            charge = (d == "das")
-            if i == "cw":
-                mino.rotate(1, new_bitgrid)
-            elif i == "ccw":
-                mino.rotate(-1, new_bitgrid)
-            elif i == "180":
-                mino.rotate(2, new_bitgrid)
-            elif i == "right":
-                self.move_mino(mino, 1, 0, new_bitgrid, charge)
-            elif i == "left":
-                self.move_mino(mino, -1, 0, new_bitgrid, charge)
-            elif i == "softdrop":
-                self.soft_drop(mino, new_bitgrid)
-                
-        drop_bitgrid = new_bitgrid.copy()
-        self.soft_drop(mino, drop_bitgrid)
-        self.place(mino, drop_bitgrid)
-        
-        self.place(mino, new_bitgrid)
-        self.line_clear(new_bitgrid)
-        
-        return new_bitgrid, drop_bitgrid
-    
+            
     def execute_move(self, move):
         if move.hold:
             self.input("hold", 0)
             self.hold_type = move.hold
-            # self.input("delay", self.think_time//10)
-            
+
         inputs = move.inputs
         for i, d in inputs:
             time = 0 if d == "tap" else self.handling["das"]
@@ -267,6 +233,7 @@ class Bot:
 
         self.input("harddrop", 0)
 
+    @lru_cache(maxsize=1000)
     def get_heights(self, bitgrid):
         heights = [0]*BOARD_W
         board_h = len(bitgrid)
@@ -316,10 +283,11 @@ class Bot:
             return 0
         return self.get_lines(bitgrid)
 
-    def get_scores(self, bitgrid, blocked, mino_type):
-        lines = 0
-        lines += LINES[self.get_mode(bitgrid)][self.get_lines(bitgrid)]
-        lines += TSPIN_LINES[self.get_tspins(bitgrid, blocked, mino_type)]
+    @lru_cache(maxsize=1000)
+    def get_scores(self, bitgrid):
+    # def get_scores(self, bitgrid, blocked, mino_type):
+        # lines += TSPIN_LINES[self.get_tspins(bitgrid, blocked, mino_type)]
+        lines = LINES[self.get_mode(bitgrid)][self.get_lines(bitgrid)]
         change_rate = self.get_change_rate(bitgrid)
         holes = self.get_holes(bitgrid)
 
@@ -360,6 +328,8 @@ class Bot:
             move = self.beam_search()
             if move:
                 self.execute_move(move)
+                # print_bitgrid(move.bitgrid, BOARD_W)
+                # print(move.inputs)
                 self.bitgrid = move.bitgrid
                 # print_bitgrid(self.bitgrid, BOARD_W)
                 self.line_clear(self.bitgrid)

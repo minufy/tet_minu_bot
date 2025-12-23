@@ -1,4 +1,4 @@
-from utils import grid_to_bitgrid, FULL_ROW
+from utils import grid_to_bitgrid, FULL_ROW, print_bitgrid
 
 I_OFFSETS = {
     "01": [[1, 0], [-2, 0], [-2, 1], [1, -2]],
@@ -193,6 +193,8 @@ for type in MINO_SHAPES:
     BIT_SHAPES[type] = {}
     for r in MINO_SHAPES[type]:
         BIT_SHAPES[type][r] = grid_to_bitgrid(MINO_SHAPES[type][r], 0)
+        # if type == "L":
+        #     print_bitgrid(BIT_SHAPES[type][r], len(BIT_SHAPES[type][r]))
 
 class Mino:
     def __init__(self, type, x, y, rotation=0):
@@ -232,7 +234,7 @@ class Mino:
 
     def test_offsets(self, bitgrid, offsets):
         for x, y in offsets:
-            if self.move(x, -y, bitgrid):
+            if self.move(x, y, bitgrid):
                 return True
         return False
 
