@@ -4,18 +4,18 @@ from collections import deque
 from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
-SEARCH_DEPTH = 2
-SEARCH_COUNT = 12
+SEARCH_DEPTH = 4
+SEARCH_COUNT = 15
 
-DANGER_HEIGHT = 7
+DANGER_HEIGHT = 6
 MAX_LEN_INPUTS = 4
 
 LINES = {
     "upstack": {
         0: 0,
-        1: -1,
-        2: -1,
-        3: -1,
+        1: -4,
+        2: -4,
+        3: -4,
         4: 10
     }, 
     "downstack": {
@@ -28,25 +28,11 @@ LINES = {
 }
 
 TSPIN_LINES = {
-    3: 15,
-    2: 10,
-    1: 2,
+    3: 35,
+    2: 30,
+    1: 0,
     0: 0
 }
-
-TSPIN_PATTERNS = (
-    grid_to_bitgrid((
-        (0, 0, 1),
-        (0, 0, 0),
-        (1, 0, 1),
-    ), 0),
-    grid_to_bitgrid((
-        (1, 0, 0),
-        (0, 0, 0),
-        (1, 0, 1),
-    ), 0),
-)
-TSPIN_PATTERN_SIZE = 3
 
 MINO_ROTATIONS = {
     "O": [],
@@ -96,7 +82,6 @@ class SearchState:
 class Bot:
     def __init__(self, game, think_time):
         self.game = game
-        self.bitgrid = grid_to_bitgrid(self.game.board.grid)
         self.queue = [self.game.mino.type]+self.game.queue[:]
         self.last_queue = []
         self.inputs = []
@@ -116,11 +101,6 @@ class Bot:
 
     def sync(self):
         print("syncing..")
-        print("GAME")
-        print_bitgrid(grid_to_bitgrid(self.game.board.grid[20:]), BOARD_W)
-        print("BOT")
-        print_bitgrid(self.bitgrid[20:], BOARD_W)
-        self.bitgrid = grid_to_bitgrid(self.game.board.grid)
         self.queue = [self.game.mino.type]+self.game.queue[:]
         self.last_queue = []
         self.hold_type = self.game.hold_type
@@ -295,28 +275,25 @@ class Bot:
         change_rate = sum(diffs)/BOARD_W
         return change_rate
     
-    def get_tspin_potential(self, bitgrid):
-        count = 0
-        h = len(bitgrid) 
-        mask = (1<<TSPIN_PATTERN_SIZE)-1
-        for pattern in TSPIN_PATTERNS:
-            for y in range(h-TSPIN_PATTERN_SIZE+1):
-                for x in range(BOARD_W-TSPIN_PATTERN_SIZE+1):
-                    found = True
-                    for py in range(TSPIN_PATTERN_SIZE):
-                        shift = BOARD_W-x-TSPIN_PATTERN_SIZE
-                        window = (bitgrid[y+py]>>shift) & mask
-                        if window != pattern[py]:
-                            found = False
-                            break
-                    if found:
-                        count += 1
-        return count
-
-    def get_tspin_lines(self, bitgrid, blocked, mino_type):
-        if not blocked:
+    def get_tspin_potential(self, bitgrid, mino_type):
+        if "T" not in self.queue+[self.hold_type] or mino_type == "T":
             return 0
-        if mino_type != "T":
+        count = 0
+        h = len(bitgrid)
+        for x in range(BOARD_W-3+1):
+            for y in range(h-2):
+                row_1 = (bitgrid[y]>>x) & 0b111
+                row_2 = (bitgrid[y+1]>>x) & 0b111
+                row_3 = (bitgrid[y+2]>>x) & 0b111
+
+                if row_1 == 0b100 or row_1 == 0b001:
+                    if row_2 == 0b000:
+                        if row_3 == 0b101:
+                            count += 1
+        return count
+    
+    def get_tspin_lines(self, bitgrid, blocked, mino_type):
+        if not blocked or mino_type != "T":
             return 0
         return self.get_lines(bitgrid)
 
@@ -326,18 +303,20 @@ class Bot:
         lines += TSPIN_LINES[self.get_tspin_lines(bitgrid, blocked, mino_type)]
         change_rate = self.get_change_rate(bitgrid)
         holes = self.get_holes(bitgrid)
-        tspin_potential = self.get_tspin_potential(bitgrid)
+        tspin_potential = self.get_tspin_potential(bitgrid, mino_type)
+        height_sum = sum(self.get_heights(bitgrid))/BOARD_W
 
         weights = self.get_weights(bitgrid)
         lines *= weights["lines"]
         change_rate *= weights["change_rate"]
         holes *= weights["holes"]
         tspin_potential *= weights["tspin_potential"]
+        height_sum *= weights["height_sum"]
         
-        return lines, change_rate, holes, tspin_potential
+        return lines, change_rate, holes, tspin_potential, height_sum
     
-    def beam_search(self):
-        beam = [SearchState(tuple(self.bitgrid), self.hold_type, 0)]
+    def beam_search(self, bitgrid):
+        beam = [SearchState(tuple(bitgrid), self.hold_type, 0)]
 
         for depth in range(self.search_depth+1):
             next_beam = []
@@ -361,13 +340,11 @@ class Bot:
             
         return beam[0].first_move if beam else None
     
-    def think(self):
+    def think(self, bitgrid):
         if len(self.queue) >= max(self.search_depth, 2)+1:
-            move = self.beam_search()
+            move = self.beam_search(bitgrid)
             if move:
                 self.execute_move(move)
-                self.bitgrid = move.bitgrid
-                self.line_clear(self.bitgrid)
                 if move.hold and not self.first_held:
                     self.first_held = True
                     self.queue.pop(0)
@@ -386,10 +363,7 @@ class Bot:
         if self.think_timer >= self.think_time:
             self.think_timer = 0
             if self.inputs == []:
-                if grid_to_bitgrid(self.game.board.grid) == self.bitgrid:
-                    self.think()
-                else:
-                    self.sync()
+                self.think(grid_to_bitgrid(self.game.board.grid))
 
         if self.inputs: 
             if self.inputs[0].down_event == None:

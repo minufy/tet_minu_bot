@@ -93,9 +93,3 @@ def draw_hud(screen, bot, game):
     max_height_text = render_text(font, f"max_height: {max(bot.get_heights(bitgrid))}")
     screen.blit(max_height_text, (x, y))
     y += font.get_height()
-
-    for py, row in enumerate(bot.bitgrid):
-        for px in range(BOARD_W):
-            o = 0 if (row >> px) & 1 == 1 else 1
-            if py >= len(bot.bitgrid)//2:
-                pygame.draw.rect(screen, "#666666", (x+px*12, py*12, 12, 12), o)
