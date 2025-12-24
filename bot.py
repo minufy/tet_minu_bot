@@ -242,20 +242,13 @@ class Bot:
             if row == FULL_ROW:
                 count += 1
         return count
-
+    
     def get_holes(self, bitgrid):
         holes = 0 
         block_mask = 0
-        first_block_y = [None]*BOARD_W
-        for y, row in enumerate(bitgrid):
+        for row in bitgrid:
             row_holes = block_mask & ~row
-            for x in range(10):
-                if row_holes & (1<<x):
-                    holes += 1
-                    if first_block_y[x]:
-                        holes += (y-first_block_y[x])
-                if (row & (1<<x)) and first_block_y[x] == None:
-                    first_block_y[x] = y
+            holes += bin(row_holes & FULL_ROW).count("1")
             block_mask |= row
         return holes
 
