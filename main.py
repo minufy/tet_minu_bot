@@ -49,6 +49,8 @@ while True:
                 game.restart()
                 # game.restart(time.time())
                 bot.restart()
+            if event.key == pygame.K_k:
+                game.add_garbage(4)
             if event.key in keys_to_code:
                 game.keydown(keys_to_code[event.key])
         if event.type == pygame.KEYUP:
@@ -72,5 +74,7 @@ while True:
     game.update(dt)
     # print(bot.get_tspin_potential(grid_to_bitgrid(game.board.grid), None))
     # print(bot.get_scores(grid_to_bitgrid(game.board.grid), False, "T"))
+
+    game.get_garbage()
 
     pygame.display.update()

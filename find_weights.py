@@ -8,59 +8,40 @@ from tet_utils.game import Game
 from utils import print_bitgrid, BOARD_W
 
 class Test:
-    def __init__(self, game, bot, prev_weights_upstack=None, prev_weights_downstack=None):
+    def __init__(self, game, bot, prev_weights=None, prev_weights_downstack=None):
         self.game = game
         self.bot = bot
-        self.prev_weights_upstack = prev_weights_upstack
-        self.prev_weights_downstack = prev_weights_downstack
+        self.prev_weights = prev_weights
         self.set()
 
     def set(self):
         one = 0.05
-        weights_upstack = {
+        weights = {
             "lines": random.random()+one,
             "change_rate": -random.random()+one,
             "holes": -random.random()+one,
             "tspin_potential": random.random()*1.5+one,
-            "height_sum": -random.random()+one,
+            "max_height": -random.random()+one,
         }
-        weights_downstack = {
-            "lines": random.random()+one,
-            "change_rate": -random.random()+one,
-            "holes": -random.random()+one,
-            "tspin_potential": random.random()*1.5+one,
-            "height_sum": -random.random()+one,
-        }
-
-        if self.prev_weights_upstack:
-            self.weights_upstack = self.prev_weights_upstack
-            for weight in self.weights_upstack:
-                self.weights_upstack[weight] += (weights_upstack[weight]-self.weights_upstack[weight])*RATE
+        if self.prev_weights:
+            self.weights = self.prev_weights
+            for weight in self.weights:
+                self.weights[weight] += (weights[weight]-self.weights[weight])*RATE
         else:
-            self.weights_upstack = weights_upstack
+            self.weights = weights
 
-        if self.prev_weights_downstack:
-            self.weights_downstack = self.prev_weights_downstack
-            for weight in self.weights_downstack:
-                self.weights_downstack[weight] += (weights_downstack[weight]-self.weights_downstack[weight])*RATE
-        else:
-            self.weights_downstack = weights_downstack
+        for weight in self.weights:
+            self.weights[weight] = round(self.weights[weight], 3)
 
-        for weight in self.weights_upstack:
-            self.weights_upstack[weight] = round(self.weights_upstack[weight], 3)
-        for weight in self.weights_downstack:
-            self.weights_downstack[weight] = round(self.weights_downstack[weight], 3)
-
-        self.bot.set_weights(self.weights_upstack, self.weights_downstack)
+        self.bot.set_weights(self.weights)
             
 class Result:
-    def __init__(self, score, weights_upstack, weights_downstack):
+    def __init__(self, score, weights):
         self.score = score
-        self.weights_upstack = weights_upstack
-        self.weights_downstack = weights_downstack
+        self.weights = weights
 
 RATE = 0.3
-TEST_DEPTH = 20
+TEST_DEPTH = 10
 TEST_COUNT = 3
 TEST_DURATION = 10000
 
@@ -88,13 +69,13 @@ def run_test(args):
     }
     game = Game(handling)
     bot = Bot(game, 0)
-    test = Test(game, bot, prev_result.weights_upstack, prev_result.weights_downstack)
+    test = Test(game, bot, prev_result.weights)
     
     run_game(bot, game)
     score = game.attack 
     print(f"{i+1}/{TEST_COUNT}")
     print(f"score: {score}")
-    return Result(score, test.weights_upstack, test.weights_downstack)
+    return Result(score, test.weights)
 
 def run(prev_result, depth=0):
     print(f"> depth: {depth}")

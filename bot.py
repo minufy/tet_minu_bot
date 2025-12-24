@@ -1,21 +1,21 @@
 from minos import Mino, BIT_SHAPES
-from weights import up, down
+from weights import weights
 from collections import deque
 from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
 SEARCH_DEPTH = 4
-SEARCH_COUNT = 15
+SEARCH_COUNT = 20
 
-DANGER_HEIGHT = 6
+DANGER_HEIGHT = 7
 MAX_LEN_INPUTS = 4
 
 LINES = {
     "upstack": {
         0: 0,
-        1: -4,
-        2: -4,
-        3: -4,
+        1: -1,
+        2: -1,
+        3: -1,
         4: 10
     }, 
     "downstack": {
@@ -85,8 +85,7 @@ class Bot:
         self.queue = [self.game.mino.type]+self.game.queue[:]
         self.last_queue = []
         self.inputs = []
-        self.weights_upstack = up
-        self.weights_downstack = down
+        self.weights = weights
         self.think_time = think_time
         self.think_timer = 0
         self.handling = game.handling
@@ -95,9 +94,8 @@ class Bot:
         self.search_depth = SEARCH_DEPTH
         self.search_count = SEARCH_COUNT
 
-    def set_weights(self, up, down):
-        self.weights_upstack = up
-        self.weights_downstack = down
+    def set_weights(self, weights):
+        self.weights = weights
 
     def sync(self):
         print("syncing..")
@@ -118,12 +116,6 @@ class Bot:
         if max(self.get_heights(bitgrid)) < DANGER_HEIGHT:
             return "upstack"
         return "downstack"
-
-    def get_weights(self, bitgrid):
-        mode = self.get_mode(bitgrid)
-        if mode == "upstack":
-            return self.weights_upstack
-        return self.weights_downstack
 
     def place(self, mino, bitgrid):
         bit_shape = BIT_SHAPES[mino.type][str(mino.rotation)]
@@ -276,7 +268,7 @@ class Bot:
         return change_rate
     
     def get_tspin_potential(self, bitgrid, mino_type):
-        if "T" not in self.queue+[self.hold_type] or mino_type == "T":
+        if "T" not in self.queue[:5]+[self.hold_type] or mino_type == "T":
             return 0
         count = 0
         h = len(bitgrid)
@@ -304,16 +296,16 @@ class Bot:
         change_rate = self.get_change_rate(bitgrid)
         holes = self.get_holes(bitgrid)
         tspin_potential = self.get_tspin_potential(bitgrid, mino_type)
-        height_sum = sum(self.get_heights(bitgrid))/BOARD_W
+        max_height = max(self.get_heights(bitgrid))
 
-        weights = self.get_weights(bitgrid)
+        weights = self.weights
         lines *= weights["lines"]
         change_rate *= weights["change_rate"]
         holes *= weights["holes"]
         tspin_potential *= weights["tspin_potential"]
-        height_sum *= weights["height_sum"]
+        max_height *= weights["max_height"]
         
-        return lines, change_rate, holes, tspin_potential, height_sum
+        return lines, change_rate, holes, tspin_potential, max_height
     
     def beam_search(self, bitgrid):
         beam = [SearchState(tuple(bitgrid), self.hold_type, 0)]
