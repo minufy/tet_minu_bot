@@ -20,7 +20,7 @@ handling = {
     "arr": 0,
     "sdf": 0
 }
-game = Game(handling, None)
+game = Game(handling, 69420)
 bot = Bot(game, 1)
 
 keys_to_code = {
@@ -34,7 +34,7 @@ keys_to_code = {
     pygame.K_DOWN: "softdrop",
 }
 
-bot_active = True
+bot_active = False
 while True:
     screen.fill("#333333")
      
@@ -46,7 +46,7 @@ while True:
             if event.key == pygame.K_BACKSPACE:
                 bot_active = not bot_active
             if event.key == pygame.K_r:
-                game.restart()
+                game.restart(69420)
                 # game.restart(time.time())
                 bot.restart()
             if event.key == pygame.K_k:

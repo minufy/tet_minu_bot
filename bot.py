@@ -4,8 +4,8 @@ from collections import deque
 from utils import print_bitgrid, grid_to_bitgrid, BOARD_W, FULL_ROW, timer
 from functools import lru_cache
 
-SEARCH_DEPTH = 4
-SEARCH_COUNT = 20
+SEARCH_DEPTH = 5
+SEARCH_COUNT = 17
 
 DANGER_HEIGHT = 7
 MAX_LEN_INPUTS = 4
@@ -28,8 +28,8 @@ LINES = {
 }
 
 TSPIN_LINES = {
-    3: 35,
-    2: 30,
+    3: 40,
+    2: 35,
     1: 0,
     0: 0
 }
@@ -261,7 +261,7 @@ class Bot:
         return change_rate
     
     def get_tspin_potential(self, bitgrid, mino_type):
-        if "T" not in self.queue[:5]+[self.hold_type] or mino_type == "T":
+        if "T" not in self.queue[:4]+[self.hold_type] or mino_type == "T":
             return 0
         count = 0
         h = len(bitgrid)

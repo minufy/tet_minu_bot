@@ -94,9 +94,8 @@ def run(prev_result, depth=0):
 if __name__ == "__main__":
     mp.freeze_support()
     
-    result = run(Result(0, None, None))
+    result = run(Result(0, None))
     with open("weights.py", "a") as file:
         file.writelines("\n")
         file.writelines(f"# score: {result.score}\n")
-        file.writelines(f"up = {result.weights_upstack}\n")
-        file.writelines(f"down = {result.weights_downstack}\n")
+        file.writelines(f"weights = {result.weights}\n")
