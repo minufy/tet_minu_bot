@@ -20,7 +20,7 @@ handling = {
     "arr": 0,
     "sdf": 0
 }
-game = Game(handling, 69420)
+game = Game(handling, 1)
 bot = Bot(game, 1)
 
 keys_to_code = {
@@ -46,7 +46,7 @@ while True:
             if event.key == pygame.K_BACKSPACE:
                 bot_active = not bot_active
             if event.key == pygame.K_r:
-                game.restart(69420)
+                game.restart(1)
                 # game.restart(time.time())
                 bot.restart()
             if event.key == pygame.K_k:
