@@ -8,7 +8,7 @@ SEARCH_DEPTH = 5
 SEARCH_COUNT = 17
 
 DANGER_HEIGHT = 7
-MAX_LEN_INPUTS = 4
+MAX_LEN_INPUTS = 6
 
 LINES = {
     "upstack": {
@@ -261,7 +261,7 @@ class Bot:
         return change_rate
     
     def get_tspin_potential(self, bitgrid, mino_type):
-        if "T" not in self.queue[:4]+[self.hold_type] or mino_type == "T":
+        if "T" not in self.queue[:3]+[self.hold_type] or mino_type == "T":
             return 0
         count = 0
         h = len(bitgrid)

@@ -16,11 +16,11 @@ screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 clock = pygame.time.Clock()
 
 handling = {
-    "das": 117,
+    "das": 100,
     "arr": 0,
     "sdf": 0
 }
-game = Game(handling, 1)
+game = Game(handling)
 bot = Bot(game, 1)
 
 keys_to_code = {
@@ -34,7 +34,7 @@ keys_to_code = {
     pygame.K_DOWN: "softdrop",
 }
 
-bot_active = False
+bot_active = True
 while True:
     screen.fill("#333333")
      
@@ -46,8 +46,7 @@ while True:
             if event.key == pygame.K_BACKSPACE:
                 bot_active = not bot_active
             if event.key == pygame.K_r:
-                game.restart(1)
-                # game.restart(time.time())
+                game.restart()
                 bot.restart()
             if event.key == pygame.K_k:
                 game.add_garbage(4)
